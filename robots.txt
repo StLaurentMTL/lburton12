@@ -1,0 +1,4 @@
+User-agent: *
+Disallow:
+
+Sitemap: https://stlaurentmtl.github.io/lburton12/sitemap.xml
