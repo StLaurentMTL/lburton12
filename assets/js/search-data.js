@@ -402,9 +402,9 @@ ninja.data = [{
             },},{id: "news-a-simple-inline-announcement-with-markdown-emoji-sparkles-smile",
           title: 'A simple inline announcement with Markdown emoji! :sparkles: :smile:',
           description: "",
-          section: "News",},{id: "projects-",
-          title: '',
-          description: "",
+          section: "News",},{id: "projects-data-centers-next-door-how-cloud-infrastructure-shapes-housing-and-local-resource-costs",
+          title: 'Data Centers Next Door: How Cloud Infrastructure Shapes Housing and Local Resource Costs...',
+          description: "A computational and data-driven analysis of the impact of cloud infrastructure development on housing prices in Chicago.",
           section: "Projects",handler: () => {
               window.location.href = "/lburton12/projects/1_project/";
             },},{id: "projects-project-2",
