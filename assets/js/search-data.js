@@ -407,9 +407,9 @@ ninja.data = [{
           description: "A computational and data-driven analysis of the impact of cloud infrastructure development on housing prices in Chicago.",
           section: "Projects",handler: () => {
               window.location.href = "/lburton12/projects/1_project/";
-            },},{id: "projects-project-2",
-          title: 'project 2',
-          description: "a project with a background image and giscus comments",
+            },},{id: "projects-that-39-s-what-xi-said",
+          title: 'That&amp;#39;s what Xi Said',
+          description: "A Computational Analysis of President Xi Jin Ping&#39;s (习近平) speeches",
           section: "Projects",handler: () => {
               window.location.href = "/lburton12/projects/2_project/";
             },},{id: "projects-project-3-with-very-long-name",
