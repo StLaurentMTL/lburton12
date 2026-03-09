@@ -5,9 +5,11 @@ description: A computational and data-driven analysis of the impact of cloud inf
 img: assets/img/chicago_data_centers.jpg
 importance: 1
 category: work
-related_publications: true
+related_publications: false
 github: https://github.com/uchicago-2026-capp30122/project-datacenter-urban-effects
 ---
+<a href="https://github.com/uchicago-2026-capp30122/project-datacenter-urban-effects" class="btn btn-primary" target="_blank">View on GitHub</a>
+
 Data Centers are facilities with IT infrastructure that enables companies and users to build, run, and deliver applications and services. As AI becomes an increasingly integral part of digital products and services, new data centers are built at an unprecedented rate. However, data centers have been subject to controversy among many communities for how they have affected costs of living. In Data Centers Next Door, we aim to see if communities in the Chicagoland area have seen similar rising costs due to the building of data centers in their community.
 
 <div class="row">
