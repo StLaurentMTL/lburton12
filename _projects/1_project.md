@@ -11,14 +11,9 @@ Data Centers are facilities with IT infrastructure that enables companies and us
 
 <div class="row">
     <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/Screenshot 2026-03-09 180159.jpg" title="Dashboard" class="img-fluid rounded z-depth-1" %}
+        {% include figure.liquid loading="eager" path="assets/img/chicago_data_centers.jpg" title="Dashboard" class="img-fluid rounded z-depth-1" %}
     </div>
 </div>
 <div class="caption">
     Our project includes a geospatial, time series, and statistical analysis of the current trends of data centers in the Chicagoland area. 
 </div>
-
-
-```
-
-{% endraw %}
