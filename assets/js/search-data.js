@@ -412,11 +412,6 @@ ninja.data = [{
           description: "A Computational Analysis of President Xi Jin Ping&#39;s (习近平) speeches",
           section: "Projects",handler: () => {
               window.location.href = "/lburton12/projects/2_project/";
-            },},{id: "projects-project-8",
-          title: 'project 8',
-          description: "an other project with a background image and giscus comments",
-          section: "Projects",handler: () => {
-              window.location.href = "/lburton12/projects/8_project/";
             },},{id: "projects-project-9",
           title: 'project 9',
           description: "another project with an image 🎉",
