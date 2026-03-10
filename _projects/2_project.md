@@ -1,11 +1,12 @@
 ---
 layout: page
 title: That's what Xi Said
-description: A Computational Analysis of President Xi Jin Ping's (习近平) speeches
+description: A Computational Text Analysis of President Xi Jin Ping's (习近平) speeches
 img: assets/img/thats_what_xi_said.jpg
 importance: 2
 category: work
 giscus_comments: false
+github: https://github.com/StLaurentMTL/Xi-Jin-Ping-Speech-Analysis?tab=readme-ov-file
 ---
 
 <a href="https://github.com/StLaurentMTL/Xi-Jin-Ping-Speech-Analysis?tab=readme-ov-file" class="btn btn-primary" target="_blank">View on GitHub</a>
