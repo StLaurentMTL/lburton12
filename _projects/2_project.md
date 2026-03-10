@@ -7,6 +7,9 @@ importance: 2
 category: work
 giscus_comments: false
 ---
+
+<a href="https://github.com/StLaurentMTL/Xi-Jin-Ping-Speech-Analysis?tab=readme-ov-file" class="btn btn-primary" target="_blank">View on GitHub</a>
+
 <div class="row">
     <div class="col-sm mt-3 mt-md-0">
         {% include figure.liquid loading="eager" path="assets/img/most_common_tokens.jpg" title="2025 Most Used Tokens" class="img-fluid rounded z-depth-1" %}
