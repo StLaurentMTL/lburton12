@@ -412,11 +412,6 @@ ninja.data = [{
           description: "A Computational Analysis of President Xi Jin Ping&#39;s (习近平) speeches",
           section: "Projects",handler: () => {
               window.location.href = "/lburton12/projects/2_project/";
-            },},{id: "projects-project-9",
-          title: 'project 9',
-          description: "another project with an image 🎉",
-          section: "Projects",handler: () => {
-              window.location.href = "/lburton12/projects/9_project/";
             },},{id: "teachings-data-science-fundamentals",
           title: 'Data Science Fundamentals',
           description: "This course covers the foundational aspects of data science, including data collection, cleaning, analysis, and visualization. Students will learn practical skills for working with real-world datasets.",
