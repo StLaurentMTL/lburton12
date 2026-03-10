@@ -409,7 +409,7 @@ ninja.data = [{
               window.location.href = "/lburton12/projects/1_project/";
             },},{id: "projects-that-39-s-what-xi-said",
           title: 'That&amp;#39;s what Xi Said',
-          description: "A Computational Analysis of President Xi Jin Ping&#39;s (习近平) speeches",
+          description: "A Computational Text Analysis of President Xi Jin Ping&#39;s (习近平) speeches",
           section: "Projects",handler: () => {
               window.location.href = "/lburton12/projects/2_project/";
             },},{id: "teachings-data-science-fundamentals",
