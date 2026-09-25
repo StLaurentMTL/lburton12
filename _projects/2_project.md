@@ -20,8 +20,9 @@ github: https://github.com/StLaurentMTL/Xi-Jin-Ping-Speech-Analysis?tab=readme-o
     A word cloud of the most commonly used words in Xi's public speeches during 2025. 
 </div>
 
-"That's what Xi Said" is an ongoing textual analysis project of the public speeches of President Xi Jinping, the current head of state for the People's Republic of China. The project contains a convienient Mandarin text corpus of Xi's public speeches from 2022-2025 that I scraped from official state sources. 
+Based off of my work with the OECD, "That's what Xi Said" is an regularly updating Retrieval Augmented Generation
+(RAG)-powered chatbot connected to a vectorized database of President Xi Jinping's speeches from 2022-2026. 
 
-Using this text corpus, I train a relatively simple k-th order Markov model that allows for probabilistic speaker attribution. While I have primarily adopted my Markov model algorithm from a previous project/assignment I wrote, I am excited to see if these NLP techniques previously trained on an English language corpus will be salient for a Mandarin Chinese corpus.
+This chatbot is intended for researchers, journalists, and chinawatchers to search, contrast, and
+gain insights into Xi's public statements through the past decade. 
 
-Additionally, I conduct preliminary analysis using NLP techniques like LDA and Sentiment Analysis.
