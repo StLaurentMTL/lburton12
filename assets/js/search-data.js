@@ -412,6 +412,11 @@ ninja.data = [{
           description: "A RAG Chatbot of President Xi Jin Ping&#39;s (习近平) speeches",
           section: "Projects",handler: () => {
               window.location.href = "/lburton12/projects/2_project/";
+            },},{id: "projects-predicting-chronic-loneliness-from-structural-conditions",
+          title: 'Predicting Chronic Loneliness from Structural Conditions',
+          description: "This project asks whether chronic loneliness can be predicted from structural characteristics that public health agencies already observe.",
+          section: "Projects",handler: () => {
+              window.location.href = "/lburton12/projects/3_project/";
             },},{id: "teachings-data-science-fundamentals",
           title: 'Data Science Fundamentals',
           description: "This course covers the foundational aspects of data science, including data collection, cleaning, analysis, and visualization. Students will learn practical skills for working with real-world datasets.",
