@@ -1,7 +1,7 @@
 ---
 layout: page
 title: That's what Xi Said
-description: A Computational Text Analysis of President Xi Jin Ping's (习近平) speeches
+description: A RAG Chatbot of President Xi Jin Ping's (习近平) speeches
 img: assets/img/thats_what_xi_said.jpg
 importance: 2
 category: work
