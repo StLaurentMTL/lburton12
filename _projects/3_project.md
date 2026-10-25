@@ -6,19 +6,8 @@ img:
 importance: 2
 category: work
 giscus_comments: false
-github: https://github.com/StLaurentMTL/Xi-Jin-Ping-Speech-Analysis?tab=readme-ov-file
+github: https://github.com/uchicago-capp30254-spr-26/project-lcd_ml_systems
 ---
-
-<a href="https://github.com/StLaurentMTL/Xi-Jin-Ping-Speech-Analysis?tab=readme-ov-file" class="btn btn-primary" target="_blank">View on GitHub</a>
-
-<div class="row">
-    <div class="col-sm mt-3 mt-md-0">
-        {% include figure.liquid loading="eager" path="assets/img/most_common_tokens.jpg" title="2025 Most Used Tokens" class="img-fluid rounded z-depth-1" %}
-    </div>
-</div>
-<div class="caption">
-    A word cloud of the most commonly used words in Xi's public speeches during 2025. 
-</div>
 
 This project asks whether chronic loneliness can be predicted from structural characteristics that 
 public health agencies already observe, such as income, housing stability, physical health burden, 
