@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kyoto Aquarium Penguin Relationship Network</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@400;500;600;700&family=Fira+Sans+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --signage: #142561;
+  --signage-ink: #FFFFFF;
+  --paper: #FFFFFF;
+  --panel: #FFFFFF;
+  --rule: #DADDE6;
+  --text: #142561;
+  --muted: #5F6889;
+  --hover: #EEF0F6;
+  --map-bg: #FFFFFF;
+  --map-label: #142561;
+  --map-halo: #FFFFFF;
+  --ghost: #CDD1DB;
+  --female: #FFCD00;
+  --male: #00AA91;
+  --unknown: #B5B5B5;
+  --font: "Parisine", "Fira Sans", "Segoe UI", system-ui, sans-serif;
+  --font-cond: "Parisine Narrow", "Fira Sans Condensed", "Arial Narrow", "Fira Sans", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #0E1733;
+    --panel: #111C3E;
+    --rule: #27345F;
+    --text: #E9EDF8;
+    --muted: #9BA6C9;
+    --hover: #1A2850;
+    --map-bg: #0E1733;
+    --map-label: #F2F4FA;
+    --map-halo: #0E1733;
+    --ghost: #33406B;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; }
+body {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  grid-template-rows: 60px 1fr;
+  grid-template-areas: "head head" "side map";
+  font-family: var(--font);
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text);
+  background: var(--paper);
+}
+
+/* Header: the dark-blue station signage band */
+header {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 0 20px;
+  background: var(--signage);
+  color: var(--signage-ink);
+}
+.m-roundel {
+  flex: none;
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: #FFFFFF;
+  color: var(--signage);
+  display: grid; place-items: center;
+  font: 700 24px/1 var(--font);
+  box-shadow: inset 0 0 0 3px var(--signage), 0 0 0 2px #FFFFFF;
+}
+header h1 { margin: 0; font-size: 21px; font-weight: 600; letter-spacing: 0.005em; }
+header .sub { font-size: 14px; opacity: 0.75; font-weight: 400; margin-left: 12px; }
+.search { margin-left: auto; position: relative; }
+.search input {
+  width: 240px;
+  height: 36px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 18px;
+  font: 500 14px var(--font);
+  color: #142561;
+  background: #FFFFFF;
+}
+.search input::placeholder { color: #6B7393; }
+.search input:focus-visible { outline: 3px solid #FFCD00; outline-offset: 2px; }
+
+/* Sidebar */
+aside {
+  grid-area: side;
+  overflow-y: auto;
+  background: var(--panel);
+  border-right: 1px solid var(--rule);
+  padding: 18px 18px 24px;
+}
+aside h2 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 8px;
+}
+aside section + section { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--rule); }
+.hint { margin: 0 0 10px; color: var(--muted); font-size: 13px; }
+
+.lines { list-style: none; margin: 0; padding: 0; }
+.line { display: flex; align-items: center; border-radius: 22px; }
+.line:hover { background: var(--hover); }
+.line-toggle {
+  flex: 1;
+  display: flex; align-items: center; gap: 10px;
+  min-height: 40px;
+  padding: 4px 8px 4px 5px;
+  border: 0; background: none; color: inherit;
+  font: inherit; text-align: left; cursor: pointer;
+  border-radius: 22px;
+}
+.roundel {
+  flex: none;
+  width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--c); color: var(--t);
+  font: 700 15px/1 var(--font-cond);
+  border: 3px solid var(--c);
+}
+.line-name { flex: 1; font-weight: 500; }
+.line-count { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 13px; }
+.line-toggle[aria-pressed="false"] .roundel { background: transparent; color: var(--muted); }
+.line-toggle[aria-pressed="false"] .line-name { color: var(--muted); text-decoration: line-through; text-decoration-thickness: 1px; }
+.line-only {
+  flex: none;
+  margin-right: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--rule); border-radius: 12px;
+  background: var(--panel); color: var(--text);
+  font: 500 12px var(--font); cursor: pointer;
+  opacity: 0;
+}
+.line:hover .line-only, .line-only:focus-visible { opacity: 1; }
+@media (hover: none) { .line-only { opacity: 1; } }
+
+.row-actions { display: flex; gap: 8px; margin-top: 10px; }
+.btn {
+  padding: 7px 14px;
+  border: 1px solid var(--signage);
+  border-radius: 18px;
+  background: transparent; color: var(--text);
+  font: 500 13px var(--font); cursor: pointer;
+}
+@media (prefers-color-scheme: dark) { .btn { border-color: #8E9BC6; } }
+.btn:hover { background: var(--hover); }
+.btn.primary { background: var(--signage); color: #FFFFFF; border-color: var(--signage); }
+.btn.primary:hover { filter: brightness(1.2); }
+
+.option { display: flex; gap: 10px; align-items: flex-start; padding: 6px 0; cursor: pointer; }
+.option input { margin: 3px 0 0; width: 16px; height: 16px; accent-color: var(--signage); flex: none; }
+@media (prefers-color-scheme: dark) { .option input { accent-color: #8E9BC6; } }
+
+.key { display: grid; grid-template-columns: 40px 1fr; gap: 6px 10px; align-items: center; }
+.key svg { width: 36px; height: 36px; }
+
+.summary { font-variant-numeric: tabular-nums; }
+.summary strong { font-weight: 600; }
+
+button:focus-visible, .station:focus-visible { outline: 3px solid #FFCD00; outline-offset: 2px; }
+
+/* Map */
+main { grid-area: map; position: relative; overflow: hidden; background: var(--map-bg); }
+#map { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; user-select: none; }
+#map.panning { cursor: grabbing; }
+
+.zoom {
+  position: absolute; right: 18px; bottom: 18px;
+  display: flex; flex-direction: column;
+  border-radius: 8px; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(20, 37, 97, 0.25), 0 4px 14px rgba(20, 37, 97, 0.18);
+}
+.zoom button {
+  width: 40px; height: 40px; border: 0;
+  background: var(--signage); color: #FFFFFF;
+  font: 600 20px/1 var(--font); cursor: pointer;
+}
+.zoom button + button { border-top: 1px solid rgba(255, 255, 255, 0.22); }
+.zoom button:hover { filter: brightness(1.25); }
+.zoom .fit { font-size: 12px; font-weight: 600; }
+
+.card {
+  position: absolute; top: 18px; right: 18px;
+  width: 300px; max-height: calc(100% - 100px);
+  display: flex; flex-direction: column;
+  background: var(--panel); color: var(--text);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 2px 0 rgba(20, 37, 97, 0.15), 0 10px 30px rgba(20, 37, 97, 0.22);
+}
+.card[hidden] { display: none; }
+.card-head {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 12px 12px 16px;
+  background: var(--signage); color: #FFFFFF;
+}
+.card-head h3 { margin: 0; font-size: 18px; font-weight: 600; flex: 1; }
+.card-close {
+  width: 30px; height: 30px; border: 0; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.14); color: #FFFFFF;
+  font-size: 18px; line-height: 1; cursor: pointer;
+}
+.card-body { padding: 12px 16px 16px; overflow-y: auto; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 2px 12px; margin: 0 0 12px; font-size: 13px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.card h4 { margin: 12px 0 6px; font-size: 14px; font-weight: 600; }
+.conn-line { display: flex; gap: 10px; padding: 6px 0; border-top: 1px solid var(--rule); }
+.conn-line .roundel { width: 26px; height: 26px; font-size: 13px; }
+.conn-line ul { list-style: none; margin: 0; padding: 0; flex: 1; }
+.conn-line .type { font-weight: 500; font-size: 13px; color: var(--muted); }
+.conn-line button {
+  border: 0; background: none; padding: 1px 0; color: var(--text);
+  font: 500 14px var(--font); cursor: pointer; text-align: left;
+}
+.conn-line button:hover { text-decoration: underline; }
+.empty { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
+
+.tip {
+  position: absolute; pointer-events: none;
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 10px 6px 6px;
+  background: var(--signage); color: #FFFFFF;
+  border-radius: 18px; font-size: 13px; white-space: nowrap;
+  transform: translate(12px, -50%);
+}
+.tip[hidden] { display: none; }
+.tip .roundel { width: 24px; height: 24px; font-size: 12px; border-color: #FFFFFF; box-shadow: 0 0 0 1px #FFFFFF; }
+
+.toast {
+  position: absolute; left: 50%; bottom: 22px; transform: translateX(-50%);
+  padding: 9px 16px; border-radius: 18px;
+  background: var(--signage); color: #FFFFFF; font-size: 13px;
+}
+.toast[hidden] { display: none; }
+
+@media (max-width: 780px) {
+  body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto 1fr;
+    grid-template-areas: "head" "side" "map";
+  }
+  header { flex-wrap: wrap; padding: 10px 14px; row-gap: 8px; }
+  header h1 { font-size: 18px; }
+  header .sub { display: none; }
+  .search { margin-left: 0; width: 100%; }
+  .search input { width: 100%; }
+  aside { max-height: 38vh; border-right: 0; border-bottom: 1px solid var(--rule); }
+  .card { left: 12px; right: 12px; width: auto; top: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+<style id="map-css">
+.line-path { fill: none; stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.line-path.ghost { stroke: var(--ghost); stroke-width: 4; }
+.line-path.dim { opacity: 0.12; }
+.preview { fill: none; stroke: var(--map-label); stroke-width: 2; stroke-dasharray: 4 5; opacity: 0.6; }
+.station { cursor: pointer; outline: none; }
+.station .halo { fill: var(--halo); stroke: var(--halo); stroke-width: 26; stroke-linejoin: round; }
+.station .gap { fill: #FFFFFF; stroke: #FFFFFF; stroke-width: 8; stroke-linejoin: round; }
+.station .plain-stop { fill: #FFFFFF; stroke: #000000; stroke-width: 3.5; }
+.station circle.halo { stroke-width: 0; }
+.station .sel-ring { fill: none; stroke: var(--map-label); stroke-width: 3; opacity: 0; }
+.station.selected .sel-ring, .station:focus-visible .sel-ring { opacity: 1; }
+.g-female { --halo: var(--female); }
+.g-male { --halo: var(--male); }
+.g-unknown { --halo: var(--unknown); }
+.station.dim, .label.dim { opacity: 0.16; }
+.label {
+  font-family: var(--font-cond);
+  font-size: 14px; font-weight: 500;
+  fill: var(--map-label);
+  paint-order: stroke; stroke: var(--map-halo); stroke-width: 4.5; stroke-linejoin: round;
+  pointer-events: none;
+}
+.label.interchange { font-weight: 700; }
+.far .label:not(.major) { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <div class="m-roundel" aria-hidden="true">M</div>
+  <h1>Kyoto Aquarium Penguin Relationship Network<span class="sub">Three Minutes to Figure it out, Hours to take it all in</span></h1>
+  <div class="search">
+    <input id="search" type="search" list="station-names" placeholder="Find a penguin or human" aria-label="Find a penguin or human by name" autocomplete="off">
+    <datalist id="station-names"></datalist>
+  </div>
+</header>
+
+<aside>
+  <section>
+    <h2>Edges</h2>
+    <p class="hint">Each relationship type is drawn as its own coloured edge. Select edge types to build a sub-network.</p>
+    <ul class="lines" id="lines"></ul>
+    <div class="row-actions">
+      <button class="btn" id="all-lines" type="button">Show all</button>
+      <button class="btn" id="no-lines" type="button">Clear</button>
+    </div>
+  </section>
+
+  <section>
+    <h2>Display</h2>
+    <label class="option"><input type="checkbox" id="opt-hide" checked><span id="opt-hide-text">Hide penguins and humans with no selected edge</span></label>
+    <label class="option"><input type="checkbox" id="opt-ghost"><span>Show other edges in grey</span></label>
+  </section>
+
+  <section>
+    <h2 id="key-title">Penguins and humans</h2>
+    <p class="hint">The halo around each figure shows gender.</p>
+    <div class="key" id="key"></div>
+  </section>
+
+  <section>
+    <h2>In view</h2>
+    <p class="summary" id="summary"></p>
+    <button class="btn primary" id="download" type="button">Download map as SVG</button>
+  </section>
+</aside>
+
+<main>
+  <svg id="map" xmlns="http://www.w3.org/2000/svg" aria-label="Relationship network map">
+    <defs>
+      <!-- Silhouettes: geometry only, so fill/stroke come from CSS for the gender halo -->
+      <symbol id="penguin-sil" viewBox="-14 -14 128 128">
+        <ellipse cx="20" cy="60" rx="6" ry="20" transform="rotate(15 20 60)"/>
+        <ellipse cx="80" cy="60" rx="6" ry="20" transform="rotate(-15 80 60)"/>
+        <ellipse cx="50" cy="56" rx="30" ry="38"/>
+        <ellipse cx="38" cy="95" rx="10" ry="4"/>
+        <ellipse cx="62" cy="95" rx="10" ry="4"/>
+      </symbol>
+      <symbol id="penguin" viewBox="-14 -14 128 128">
+        <ellipse cx="20" cy="60" rx="6" ry="20" fill="#1B2A3A" transform="rotate(15 20 60)"/>
+        <ellipse cx="80" cy="60" rx="6" ry="20" fill="#1B2A3A" transform="rotate(-15 80 60)"/>
+        <ellipse cx="50" cy="56" rx="30" ry="38" fill="#1B2A3A"/>
+        <ellipse cx="50" cy="65" rx="20" ry="27" fill="#FFFFFF"/>
+        <circle cx="41" cy="34" r="5" fill="#FFFFFF"/><circle cx="59" cy="34" r="5" fill="#FFFFFF"/>
+        <circle cx="41" cy="35" r="2.2" fill="#000000"/><circle cx="59" cy="35" r="2.2" fill="#000000"/>
+        <polygon points="43,42 57,42 50,52" fill="#F6A21E"/>
+        <ellipse cx="38" cy="95" rx="10" ry="4" fill="#F6A21E"/>
+        <ellipse cx="62" cy="95" rx="10" ry="4" fill="#F6A21E"/>
+      </symbol>
+      <symbol id="human-sil" viewBox="-14 -14 128 128">
+        <path d="M12 98 Q12 56 50 56 Q88 56 88 98 Z"/>
+        <circle cx="50" cy="30" r="19"/>
+        <path d="M30 28 Q50 0 70 28 Q50 14 30 28 Z"/>
+      </symbol>
+      <symbol id="human" viewBox="-14 -14 128 128">
+        <path d="M12 98 Q12 56 50 56 Q88 56 88 98 Z" fill="#E4572E"/>
+        <circle cx="50" cy="30" r="19" fill="#F2C9A0"/>
+        <path d="M30 28 Q50 0 70 28 Q50 14 30 28 Z" fill="#4A3426"/>
+        <circle cx="43" cy="32" r="2" fill="#222222"/><circle cx="57" cy="32" r="2" fill="#222222"/>
+        <path d="M44 40 Q50 45 56 40" stroke="#222222" stroke-width="1.6" fill="none"/>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="tip" id="tip" hidden></div>
+  <div class="toast" id="toast" role="status" hidden></div>
+
+  <section class="card" id="card" hidden aria-live="polite">
+    <div class="card-head">
+      <h3 id="card-title"></h3>
+      <button class="card-close" id="card-close" type="button" aria-label="Close details">&times;</button>
+    </div>
+    <div class="card-body" id="card-body"></div>
+  </section>
+
+  <div class="zoom">
+    <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+    <button type="button" id="zoom-out" aria-label="Zoom out">&minus;</button>
+    <button type="button" id="zoom-fit" class="fit" aria-label="Fit map to view">Fit</button>
+  </div>
+</main>
+
+<script>
+(() => {
+"use strict";
+const DATA = {"title": "Kyoto Aquarium Penguin Relationship Network", "cell": 64, "directed": true, "genderAttr": "sex", "genderColors": {"female": "#FFCD00", "male": "#00AA91", "unknown": "#B5B5B5"}, "lines": [{"type": "friend", "label": "Friend", "number": "1", "color": "#FFCD00", "ink": "#000000", "count": 50}, {"type": "romantic_interest", "label": "Romantic interest", "number": "2", "color": "#003CA6", "ink": "#FFFFFF", "count": 11}, {"type": "spouse", "label": "Spouse", "number": "3", "color": "#837902", "ink": "#FFFFFF", "count": 24}, {"type": "love", "label": "Love", "number": "4", "color": "#CF009E", "ink": "#FFFFFF", "count": 4}, {"type": "ex", "label": "Ex", "number": "5", "color": "#FF7E2E", "ink": "#000000", "count": 46}, {"type": "enemy", "label": "Enemy", "number": "6", "color": "#6ECA97", "ink": "#000000", "count": 21}, {"type": "parent", "label": "Parent", "number": "7", "color": "#FA9ABA", "ink": "#000000", "count": 50}, {"type": "sibling", "label": "Sibling", "number": "8", "color": "#E19BDF", "ink": "#000000", "count": 36}], "nodes": [{"id": "fujimoto", "label": "Fujimoto", "species": "human", "gender": "male", "degree": 5, "size": 50.5, "x": 1280, "y": 384, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "ebisu", "label": "Ebisu", "species": "penguin", "gender": "male", "degree": 5, "size": 50.5, "x": 1280, "y": 640, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "red", "band_2": null, "stub": false}}, {"id": "shinmachi", "label": "Shinmachi", "species": "penguin", "gender": "male", "degree": 10, "size": 58.4, "x": 896, "y": 384, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "purple", "band_2": "clear", "stub": false}}, {"id": "tamba", "label": "Tamba", "species": "penguin", "gender": "female", "degree": 8, "size": 55.7, "x": 960, "y": 768, "attrs": {"new_hire": null, "pool": "lover", "band_1": "grey", "band_2": "yellow", "stub": false}}, {"id": "maru", "label": "Maru", "species": "penguin", "gender": "male", "degree": 10, "size": 58.4, "x": 320, "y": 768, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "orange", "band_2": "orange", "stub": false}}, {"id": "yoshimura", "label": "Dr. Yoshimura", "species": "human", "gender": "male", "degree": 3, "size": 45.2, "x": 320, "y": 704, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "ohkouchi", "label": "Ohkouchi", "species": "human", "gender": "female", "degree": 5, "size": 50.5, "x": 448, "y": 576, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "ushiwaka", "label": "Ushiwaka", "species": "penguin", "gender": "male", "degree": 8, "size": 55.7, "x": 704, "y": 448, "attrs": {"new_hire": null, "pool": "lover", "band_1": "grey", "band_2": "dark_green", "stub": false}}, {"id": "rei", "label": "Rei", "species": "penguin", "gender": "female", "degree": 9, "size": 57.1, "x": 448, "y": 768, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "grey", "band_2": "light_blue", "stub": false}}, {"id": "kuwada", "label": "Kuwada", "species": "human", "gender": "male", "degree": 7, "size": 54.1, "x": 704, "y": 256, "attrs": {"new_hire": 1.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "onochi", "label": "Onochi", "species": "human", "gender": "female", "degree": 5, "size": 50.5, "x": 576, "y": 128, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "uera", "label": "Uera", "species": "human", "gender": "female", "degree": 8, "size": 55.7, "x": 576, "y": 384, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "sakane", "label": "Sakane", "species": "human", "gender": "female", "degree": 9, "size": 57.1, "x": 576, "y": 256, "attrs": {"new_hire": 1.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "kujou", "label": "Kujou", "species": "penguin", "gender": "female", "degree": 7, "size": 54.1, "x": 832, "y": 768, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "yellow", "band_2": "light_green", "stub": false}}, {"id": "jujou", "label": "Jujou", "species": "penguin", "gender": "male", "degree": 8, "size": 55.7, "x": 704, "y": 1024, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "yellow", "band_2": "dark_blue", "stub": false}}, {"id": "hachi", "label": "Hachi", "species": "penguin", "gender": "female", "degree": 13, "size": 61.9, "x": 704, "y": 896, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "light_blue", "band_2": "dark_green", "stub": false}}, {"id": "chie", "label": "Chiè", "species": "penguin", "gender": "female", "degree": 10, "size": 58.4, "x": 704, "y": 768, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "black", "band_2": null, "stub": false}}, {"id": "kamanza", "label": "Kamanza", "species": "penguin", "gender": "male", "degree": 6, "size": 52.4, "x": 1088, "y": 512, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "yellow", "band_2": "dark_green", "stub": false}}, {"id": "takatsuji", "label": "Takatsuji", "species": "penguin", "gender": "male", "degree": 7, "size": 54.1, "x": 832, "y": 1280, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "pink", "band_2": "pink", "stub": false}}, {"id": "joufuku", "label": "Joufuku", "species": "penguin", "gender": "male", "degree": 10, "size": 58.4, "x": 832, "y": 1152, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "white", "band_2": "clear", "stub": false}}, {"id": "muro", "label": "Muro", "species": "penguin", "gender": "female", "degree": 10, "size": 58.4, "x": 704, "y": 1152, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "pink", "band_2": "clear", "stub": false}}, {"id": "sakura", "label": "Sakura", "species": "penguin", "gender": "male", "degree": 4, "size": 48.2, "x": 576, "y": 1280, "attrs": {"new_hire": null, "pool": "lover", "band_1": "grey", "band_2": "orange", "stub": false}}, {"id": "moto", "label": "Moto", "species": "penguin", "gender": "female", "degree": 9, "size": 57.1, "x": 832, "y": 1024, "attrs": {"new_hire": null, "pool": "hater", "band_1": "black", "band_2": "grey", "stub": false}}, {"id": "ohmiya", "label": "Ohmiya", "species": "penguin", "gender": "male", "degree": 15, "size": 64.0, "x": 448, "y": 896, "attrs": {"new_hire": null, "pool": "lover", "band_1": "brown", "band_2": "orange", "stub": false}}, {"id": "yanagi", "label": "Yanagi", "species": "penguin", "gender": "male", "degree": 4, "size": 48.2, "x": 448, "y": 1024, "attrs": {"new_hire": null, "pool": "hater", "band_1": "yellow", "band_2": "orange", "stub": false}}, {"id": "matsu", "label": "Matsu", "species": "penguin", "gender": "female", "degree": 4, "size": 48.2, "x": 256, "y": 1344, "attrs": {"new_hire": null, "pool": "hater", "band_1": "yellow", "band_2": "purple", "stub": false}}, {"id": "oike", "label": "Oikè", "species": "penguin", "gender": "male", "degree": 5, "size": 50.5, "x": 576, "y": 1024, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "light_blue", "band_2": null, "stub": false}}, {"id": "shichijou", "label": "Shichijou", "species": "penguin", "gender": "female", "degree": 12, "size": 60.8, "x": 576, "y": 896, "attrs": {"new_hire": null, "pool": "lover", "band_1": "light_green", "band_2": "purple", "stub": false}}, {"id": "man", "label": "Man", "species": "penguin", "gender": "male", "degree": 7, "size": 54.1, "x": 128, "y": 1216, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "yellow", "band_2": "pink", "stub": false}}, {"id": "ex_man", "label": "ex_man", "species": "penguin", "gender": "female", "degree": 5, "size": 50.5, "x": 128, "y": 1088, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "chara", "label": "Chara", "species": "penguin", "gender": "female", "degree": 8, "size": 55.7, "x": 320, "y": 1024, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "purple", "band_2": "dark_green", "stub": false}}, {"id": "hana", "label": "Hana", "species": "penguin", "gender": "female", "degree": 10, "size": 58.4, "x": 0, "y": 960, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "white", "band_2": "orange", "stub": false}}, {"id": "pon", "label": "Pon", "species": "penguin", "gender": "female", "degree": 11, "size": 59.6, "x": 960, "y": 896, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "grey", "band_2": "dark_blue", "stub": false}}, {"id": "tako", "label": "Tako", "species": "penguin", "gender": "male", "degree": 9, "size": 57.1, "x": 1088, "y": 1024, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "dark_green", "band_2": null, "stub": false}}, {"id": "tera", "label": "Tera", "species": "penguin", "gender": "female", "degree": 9, "size": 57.1, "x": 960, "y": 1152, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "purple", "band_2": "purple", "stub": false}}, {"id": "tanabe", "label": "Tanabe", "species": "human", "gender": "female", "degree": 7, "size": 54.1, "x": 576, "y": 512, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "sai", "label": "Sai", "species": "penguin", "gender": "female", "degree": 9, "size": 57.1, "x": 576, "y": 640, "attrs": {"new_hire": null, "pool": "lover", "band_1": "grey", "band_2": "purple", "stub": false}}, {"id": "shijou", "label": "Shijou", "species": "penguin", "gender": "male", "degree": 7, "size": 54.1, "x": 832, "y": 512, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "orange", "band_2": "dark_green", "stub": false}}, {"id": "ane", "label": "Anè", "species": "penguin", "gender": "female", "degree": 9, "size": 57.1, "x": 704, "y": 576, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "orange", "band_2": "purple", "stub": false}}, {"id": "toriyama", "label": "Dr. Toriyama", "species": "human", "gender": "female", "degree": 2, "size": 38.0, "x": 960, "y": 512, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "rokkaku", "label": "Rokkaku", "species": "penguin", "gender": "male", "degree": 6, "size": 52.4, "x": 1024, "y": 256, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "orange", "band_2": null, "stub": false}}, {"id": "bukkou", "label": "Bukkou", "species": "penguin", "gender": "male", "degree": 7, "size": 54.1, "x": 576, "y": 768, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "yellow", "band_2": "light_blue", "stub": false}}, {"id": "ryo", "label": "Ryo", "species": "penguin", "gender": "male", "degree": 5, "size": 50.5, "x": 448, "y": 384, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "yellow", "band_2": "yellow", "stub": false}}, {"id": "osshi", "label": "Osshi", "species": "penguin", "gender": "male", "degree": 7, "size": 54.1, "x": 704, "y": 640, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "light_green", "band_2": "light_blue", "stub": false}}, {"id": "saya", "label": "Saya", "species": "penguin", "gender": "female", "degree": 7, "size": 54.1, "x": 960, "y": 640, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "grey", "band_2": "pink", "stub": false}}, {"id": "naka", "label": "Naka", "species": "penguin", "gender": "male", "degree": 8, "size": 55.7, "x": 448, "y": 512, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "white", "band_2": "yellow", "stub": false}}, {"id": "mari", "label": "Mari", "species": "penguin", "gender": "female", "degree": 8, "size": 55.7, "x": 320, "y": 576, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "black", "band_2": "black", "stub": false}}, {"id": "koromo", "label": "Koromo", "species": "penguin", "gender": "female", "degree": 8, "size": 55.7, "x": 0, "y": 512, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "orange", "band_2": "clear", "stub": false}}, {"id": "yoshiya", "label": "Yoshiya", "species": "penguin", "gender": "male", "degree": 6, "size": 52.4, "x": 832, "y": 896, "attrs": {"new_hire": null, "pool": "hater", "band_1": "black", "band_2": "dark_blue", "stub": false}}, {"id": "takakura", "label": "Takakura", "species": "penguin", "gender": "male", "degree": 7, "size": 54.1, "x": 64, "y": 640, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "dark_blue", "band_2": "purple", "stub": false}}, {"id": "ex_ryo", "label": "ex_ryo", "species": "penguin", "gender": "female", "degree": 3, "size": 45.2, "x": 192, "y": 448, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "ino", "label": "Ino", "species": "penguin", "gender": "female", "degree": 6, "size": 52.4, "x": 320, "y": 448, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "white", "band_2": "pink", "stub": false}}, {"id": "ex_takakura", "label": "ex_takakura", "species": "penguin", "gender": "female", "degree": 4, "size": 48.2, "x": 64, "y": 832, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "sen", "label": "Sen", "species": "penguin", "gender": "male", "degree": 7, "size": 54.1, "x": 192, "y": 768, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "black", "band_2": "clear", "stub": false}}, {"id": "koto", "label": "Dr. Koto", "species": "human", "gender": "male", "degree": 4, "size": 48.2, "x": 832, "y": 640, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "kuruma", "label": "Kuruma", "species": "penguin", "gender": "male", "degree": 11, "size": 59.6, "x": 1152, "y": 768, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "dark_blue", "band_2": null, "stub": false}}, {"id": "ex_kuruma", "label": "ex_kuruma", "species": "penguin", "gender": "female", "degree": 3, "size": 45.2, "x": 1280, "y": 896, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "take", "label": "Takè", "species": "penguin", "gender": "male", "degree": 6, "size": 52.4, "x": 1024, "y": 896, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "light_green", "band_2": "dark_green", "stub": false}}, {"id": "ume", "label": "Umè", "species": "penguin", "gender": "female", "degree": 4, "size": 48.2, "x": 1152, "y": 896, "attrs": {"new_hire": null, "pool": "hater", "band_1": "red", "band_2": "dark_green", "stub": false}}, {"id": "ex_koromo", "label": "ex_koromo", "species": "penguin", "gender": "male", "degree": 3, "size": 45.2, "x": 256, "y": 256, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "abura", "label": "Abura", "species": "penguin", "gender": "male", "degree": 9, "size": 57.1, "x": 448, "y": 256, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "red", "band_2": "yellow", "stub": false}}, {"id": "mibu", "label": "Mibu", "species": "penguin", "gender": "female", "degree": 7, "size": 54.1, "x": 192, "y": 896, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "grey", "band_2": "red", "stub": false}}, {"id": "ex_rokkaku", "label": "ex_rokkaku", "species": "penguin", "gender": "female", "degree": 3, "size": 45.2, "x": 704, "y": 0, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "nishi", "label": "Nishi", "species": "penguin", "gender": "male", "degree": 6, "size": 52.4, "x": 1152, "y": 1344, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "pink", "band_2": "light_green", "stub": false}}, {"id": "ex_nishi", "label": "ex_nishi", "species": "penguin", "gender": "female", "degree": 4, "size": 48.2, "x": 960, "y": 1536, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "kagura", "label": "Kagura", "species": "penguin", "gender": "female", "degree": 6, "size": 52.4, "x": 960, "y": 1344, "attrs": {"new_hire": null, "pool": "neutral", "band_1": "red", "band_2": "light_green", "stub": false}}, {"id": "ex_tako", "label": "ex_tako", "species": "penguin", "gender": "female", "degree": 3, "size": 45.2, "x": 1216, "y": 1152, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "ito", "label": "Ito", "species": "human", "gender": "female", "degree": 4, "size": 48.2, "x": 448, "y": 640, "attrs": {"new_hire": 0.0, "pool": null, "band_1": null, "band_2": null, "stub": false}}, {"id": "yasaka", "label": "Yasaka", "species": "penguin", "gender": "female", "degree": 6, "size": 52.4, "x": 448, "y": 1152, "attrs": {"new_hire": null, "pool": "lover", "band_1": "grey", "band_2": "light_green", "stub": false}}, {"id": "ex_tera", "label": "ex_tera", "species": "penguin", "gender": "male", "degree": 4, "size": 48.2, "x": 960, "y": 1024, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}, {"id": "ex_shichijou", "label": "ex_shichijou", "species": "penguin", "gender": "male", "degree": 3, "size": 45.2, "x": 320, "y": 1152, "attrs": {"new_hire": null, "pool": null, "band_1": null, "band_2": null, "stub": true}}], "edges": [{"id": "e0", "source": "fujimoto", "target": "ebisu", "type": "love", "mutual": false, "attrs": {}}, {"id": "e1", "source": "fujimoto", "target": "shinmachi", "type": "love", "mutual": false, "attrs": {}}, {"id": "e2", "source": "ebisu", "target": "fujimoto", "type": "love", "mutual": false, "attrs": {}}, {"id": "e3", "source": "shinmachi", "target": "kuwada", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e4", "source": "shinmachi", "target": "fujimoto", "type": "love", "mutual": false, "attrs": {}}, {"id": "e5", "source": "shinmachi", "target": "shijou", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e6", "source": "shinmachi", "target": "uera", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e7", "source": "tamba", "target": "fujimoto", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e8", "source": "tamba", "target": "ane", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e9", "source": "tamba", "target": "koto", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e10", "source": "tamba", "target": "yoshiya", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e11", "source": "maru", "target": "yoshimura", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e12", "source": "maru", "target": "ohkouchi", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e13", "source": "maru", "target": "ohmiya", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e14", "source": "maru", "target": "sen", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e15", "source": "maru", "target": "shichijou", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e16", "source": "maru", "target": "mibu", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e17", "source": "maru", "target": "uera", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e18", "source": "yoshimura", "target": "ohkouchi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e19", "source": "ohkouchi", "target": "yoshimura", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e20", "source": "ushiwaka", "target": "ohkouchi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e21", "source": "ushiwaka", "target": "kuwada", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e22", "source": "ushiwaka", "target": "rokkaku", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e23", "source": "rei", "target": "ohkouchi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e24", "source": "rei", "target": "yanagi", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e25", "source": "rei", "target": "ohmiya", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e26", "source": "rei", "target": "sai", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e27", "source": "kuwada", "target": "shinmachi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e28", "source": "kuwada", "target": "ushiwaka", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e29", "source": "onochi", "target": "kuwada", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e30", "source": "onochi", "target": "sakane", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e31", "source": "onochi", "target": "abura", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e32", "source": "uera", "target": "kuwada", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e33", "source": "uera", "target": "sakane", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e34", "source": "uera", "target": "shinmachi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e35", "source": "uera", "target": "tanabe", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e36", "source": "sakane", "target": "kuwada", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e37", "source": "sakane", "target": "ushiwaka", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e38", "source": "sakane", "target": "tanabe", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e39", "source": "sakane", "target": "onochi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e40", "source": "sakane", "target": "sai", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e41", "source": "kujou", "target": "jujou", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e42", "source": "kujou", "target": "hachi", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e43", "source": "kujou", "target": "chie", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e44", "source": "kujou", "target": "kamanza", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e45", "source": "kujou", "target": "shinmachi", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e46", "source": "jujou", "target": "takatsuji", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e47", "source": "jujou", "target": "joufuku", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e48", "source": "jujou", "target": "chie", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e49", "source": "jujou", "target": "hachi", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e50", "source": "jujou", "target": "kujou", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e51", "source": "hachi", "target": "oike", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e52", "source": "hachi", "target": "osshi", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e53", "source": "hachi", "target": "saya", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e54", "source": "hachi", "target": "pon", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e55", "source": "hachi", "target": "sai", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e56", "source": "hachi", "target": "rei", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e57", "source": "hachi", "target": "chie", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e58", "source": "hachi", "target": "bukkou", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e59", "source": "chie", "target": "ohmiya", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e60", "source": "chie", "target": "hachi", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e61", "source": "chie", "target": "shijou", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e62", "source": "chie", "target": "ane", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e63", "source": "chie", "target": "ushiwaka", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e64", "source": "kamanza", "target": "saya", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e65", "source": "kamanza", "target": "rokkaku", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e66", "source": "kamanza", "target": "kujou", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e67", "source": "takatsuji", "target": "muro", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e68", "source": "takatsuji", "target": "sakura", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e69", "source": "takatsuji", "target": "moto", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e70", "source": "takatsuji", "target": "jujou", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e71", "source": "joufuku", "target": "kagura", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e72", "source": "joufuku", "target": "jujou", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e73", "source": "joufuku", "target": "tera", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e74", "source": "joufuku", "target": "yasaka", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e75", "source": "muro", "target": "takatsuji", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e76", "source": "muro", "target": "takatsuji", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e77", "source": "muro", "target": "ohmiya", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e78", "source": "muro", "target": "sakura", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e79", "source": "muro", "target": "moto", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e80", "source": "muro", "target": "moto", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e81", "source": "muro", "target": "yanagi", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e82", "source": "sakura", "target": "moto", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e83", "source": "moto", "target": "sakura", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e84", "source": "moto", "target": "pon", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e85", "source": "moto", "target": "tako", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e86", "source": "moto", "target": "tera", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e87", "source": "ohmiya", "target": "chara", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e88", "source": "ohmiya", "target": "hana", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e89", "source": "ohmiya", "target": "shichijou", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e90", "source": "ohmiya", "target": "muro", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e91", "source": "ohmiya", "target": "chie", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e92", "source": "ohmiya", "target": "rei", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e93", "source": "yanagi", "target": "muro", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e94", "source": "yanagi", "target": "rei", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e95", "source": "matsu", "target": "oike", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e96", "source": "matsu", "target": "man", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e97", "source": "oike", "target": "matsu", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e98", "source": "oike", "target": "shichijou", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e99", "source": "shichijou", "target": "oike", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e100", "source": "shichijou", "target": "yasaka", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e101", "source": "shichijou", "target": "mibu", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e102", "source": "shichijou", "target": "ohmiya", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e103", "source": "shichijou", "target": "take", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e104", "source": "shichijou", "target": "ex_shichijou", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e105", "source": "shichijou", "target": "maru", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e106", "source": "man", "target": "ex_man", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e107", "source": "man", "target": "ohmiya", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e108", "source": "man", "target": "chara", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e109", "source": "man", "target": "hana", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e110", "source": "man", "target": "matsu", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e111", "source": "ex_man", "target": "ohmiya", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e112", "source": "ex_man", "target": "hana", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e113", "source": "ex_man", "target": "chara", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e114", "source": "ex_man", "target": "man", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e115", "source": "chara", "target": "hana", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e116", "source": "chara", "target": "yoshiya", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e117", "source": "chara", "target": "ohmiya", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e118", "source": "hana", "target": "naka", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e119", "source": "hana", "target": "koromo", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e120", "source": "hana", "target": "ohmiya", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e121", "source": "hana", "target": "chara", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e122", "source": "pon", "target": "toriyama", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e123", "source": "pon", "target": "tanabe", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e124", "source": "pon", "target": "tako", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e125", "source": "pon", "target": "kuruma", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e126", "source": "pon", "target": "saya", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e127", "source": "tako", "target": "tera", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e128", "source": "tako", "target": "moto", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e129", "source": "tako", "target": "pon", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e130", "source": "tako", "target": "kuruma", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e131", "source": "tako", "target": "ex_tako", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e132", "source": "tera", "target": "joufuku", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e133", "source": "tera", "target": "tamba", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e134", "source": "tera", "target": "yoshiya", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e135", "source": "tera", "target": "ex_tera", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e136", "source": "tanabe", "target": "sakane", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e137", "source": "tanabe", "target": "ino", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e138", "source": "tanabe", "target": "uera", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e139", "source": "sai", "target": "sakane", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e140", "source": "sai", "target": "shinmachi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e141", "source": "sai", "target": "rei", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e142", "source": "sai", "target": "koto", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e143", "source": "shijou", "target": "shinmachi", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e144", "source": "shijou", "target": "ane", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e145", "source": "shijou", "target": "ushiwaka", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e146", "source": "shijou", "target": "chie", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e147", "source": "ane", "target": "shijou", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e148", "source": "ane", "target": "mari", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e149", "source": "ane", "target": "tamba", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e150", "source": "toriyama", "target": "ushiwaka", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e151", "source": "rokkaku", "target": "ane", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e152", "source": "rokkaku", "target": "kamanza", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e153", "source": "rokkaku", "target": "ex_rokkaku", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e154", "source": "bukkou", "target": "ryo", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e155", "source": "bukkou", "target": "hachi", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e156", "source": "bukkou", "target": "sai", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e157", "source": "bukkou", "target": "rei", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e158", "source": "ryo", "target": "ino", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e159", "source": "ryo", "target": "bukkou", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e160", "source": "ryo", "target": "ex_ryo", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e161", "source": "osshi", "target": "bukkou", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e162", "source": "osshi", "target": "saya", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e163", "source": "osshi", "target": "pon", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e164", "source": "osshi", "target": "naka", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e165", "source": "osshi", "target": "hachi", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e166", "source": "saya", "target": "ebisu", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e167", "source": "saya", "target": "pon", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e168", "source": "saya", "target": "kamanza", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e169", "source": "naka", "target": "koromo", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e170", "source": "naka", "target": "osshi", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e171", "source": "naka", "target": "mari", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e172", "source": "naka", "target": "hana", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e173", "source": "mari", "target": "naka", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e174", "source": "mari", "target": "sen", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e175", "source": "mari", "target": "ane", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e176", "source": "koromo", "target": "abura", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e177", "source": "koromo", "target": "abura", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e178", "source": "koromo", "target": "naka", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e179", "source": "koromo", "target": "ex_koromo", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e180", "source": "yoshiya", "target": "chara", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e181", "source": "yoshiya", "target": "tamba", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e182", "source": "takakura", "target": "hana", "type": "enemy", "mutual": false, "attrs": {}}, {"id": "e183", "source": "takakura", "target": "mari", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e184", "source": "takakura", "target": "sen", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e185", "source": "takakura", "target": "ino", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e186", "source": "takakura", "target": "ex_takakura", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e187", "source": "ex_ryo", "target": "ryo", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e188", "source": "ex_ryo", "target": "ino", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e189", "source": "ino", "target": "takakura", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e190", "source": "ino", "target": "maru", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e191", "source": "ex_takakura", "target": "takakura", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e192", "source": "ex_takakura", "target": "mari", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e193", "source": "ex_takakura", "target": "sen", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e194", "source": "sen", "target": "mibu", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e195", "source": "sen", "target": "mari", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e196", "source": "koto", "target": "sai", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e197", "source": "kuruma", "target": "tako", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e198", "source": "kuruma", "target": "ex_kuruma", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e199", "source": "kuruma", "target": "ebisu", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e200", "source": "kuruma", "target": "take", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e201", "source": "kuruma", "target": "ume", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e202", "source": "kuruma", "target": "pon", "type": "romantic_interest", "mutual": false, "attrs": {}}, {"id": "e203", "source": "ex_kuruma", "target": "ebisu", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e204", "source": "ex_kuruma", "target": "kuruma", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e205", "source": "take", "target": "shichijou", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e206", "source": "take", "target": "kuruma", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e207", "source": "take", "target": "ume", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e208", "source": "ume", "target": "take", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e209", "source": "ume", "target": "kuruma", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e210", "source": "ex_koromo", "target": "koromo", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e211", "source": "ex_koromo", "target": "abura", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e212", "source": "abura", "target": "onochi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e213", "source": "abura", "target": "tanabe", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e214", "source": "abura", "target": "ito", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e215", "source": "abura", "target": "uera", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e216", "source": "abura", "target": "koromo", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e217", "source": "mibu", "target": "ito", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e218", "source": "mibu", "target": "sen", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e219", "source": "mibu", "target": "yasaka", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e220", "source": "ex_rokkaku", "target": "rokkaku", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e221", "source": "ex_rokkaku", "target": "ane", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e222", "source": "nishi", "target": "ex_nishi", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e223", "source": "nishi", "target": "kagura", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e224", "source": "nishi", "target": "kagura", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e225", "source": "nishi", "target": "joufuku", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e226", "source": "ex_nishi", "target": "kagura", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e227", "source": "ex_nishi", "target": "joufuku", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e228", "source": "ex_nishi", "target": "nishi", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e229", "source": "kagura", "target": "nishi", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e230", "source": "kagura", "target": "joufuku", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e231", "source": "ex_tako", "target": "tako", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e232", "source": "ex_tako", "target": "tera", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e233", "source": "ito", "target": "koto", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e234", "source": "ito", "target": "maru", "type": "friend", "mutual": false, "attrs": {}}, {"id": "e235", "source": "yasaka", "target": "joufuku", "type": "spouse", "mutual": false, "attrs": {}}, {"id": "e236", "source": "yasaka", "target": "mibu", "type": "sibling", "mutual": false, "attrs": {}}, {"id": "e237", "source": "ex_tera", "target": "tera", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e238", "source": "ex_tera", "target": "yoshiya", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e239", "source": "ex_tera", "target": "tamba", "type": "parent", "mutual": false, "attrs": {}}, {"id": "e240", "source": "ex_shichijou", "target": "shichijou", "type": "ex", "mutual": false, "attrs": {}}, {"id": "e241", "source": "ex_shichijou", "target": "yasaka", "type": "parent", "mutual": false, "attrs": {}}]};
+const NS = "http://www.w3.org/2000/svg";
+const CELL = DATA.cell;
+const LINE_W = 6, LINE_GAP = 1.5, BEND = 24;
+const STEP = LINE_W + LINE_GAP;
+const SYMBOLS = { penguin: "penguin", human: "human" };
+
+const lines = DATA.lines;
+const nodes = DATA.nodes;
+const edges = DATA.edges.filter(e => e.source !== e.target);   // self-loops cannot be drawn as a route
+const lineByType = new Map(lines.map(l => [l.type, l]));
+const typeOrder = new Map(lines.map((l, i) => [l.type, i]));
+const nodeById = new Map(nodes.map(n => [n.id, n]));
+const KIND_NAMES = { penguin: ["penguin", "penguins"], human: ["human", "humans"] };
+const kindOf = n => (KIND_NAMES[n.species] ? n.species : "other");
+const kindNoun = (kind, plural) => (KIND_NAMES[kind] || ["other", "others"])[plural ? 1 : 0];
+const KINDS = ["penguin", "human", "other"].filter(k => nodes.some(n => kindOf(n) === k));
+const joinWords = (w, conj) => (w.length < 2 ? w.join("") : w.slice(0, -1).join(", ") + ` ${conj} ` + w[w.length - 1]);
+const ALL_PLURAL = joinWords(KINDS.map(k => kindNoun(k, true)), "and");    // "penguins and humans"
+const ANY_SINGULAR = joinWords(KINDS.map(k => kindNoun(k, false)), "or");  // "penguin or human"
+const majorCut = [...nodes].map(n => n.degree).sort((a, b) => b - a)[Math.floor(nodes.length * 0.2)] ?? 0;
+
+const state = {
+  active: new Set(lines.map(l => l.type)),
+  hideUnserved: true,
+  ghosts: false,
+  focus: null,
+  visible: new Set(),
+  view: { k: 1, x: 0, y: 0 },
+};
+
+const $ = sel => document.querySelector(sel);
+function svgEl(tag, attrs, parent) {
+  const e = document.createElementNS(NS, tag);
+  for (const [k, v] of Object.entries(attrs || {})) e.setAttribute(k, v);
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function htmlEl(tag, props, parent) {
+  const e = document.createElement(tag);
+  Object.assign(e, props || {});
+  if (parent) parent.appendChild(e);
+  return e;
+}
+function roundel(line, parent) {
+  const r = htmlEl("span", { className: "roundel", textContent: line.number }, parent);
+  r.style.setProperty("--c", line.color);
+  r.style.setProperty("--t", line.ink);
+  r.setAttribute("aria-hidden", "true");
+  return r;
+}
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const f = n => Math.round(n * 10) / 10;
+
+/* ---------- Map layers ---------- */
+const svg = $("#map");
+const viewport = svgEl("g", { class: "viewport" }, svg);
+const gGhost = svgEl("g", { class: "layer-ghost" }, viewport);
+const gLines = svgEl("g", { class: "layer-lines" }, viewport);
+const gDir = svgEl("g", { class: "layer-dir" }, viewport);
+const gStations = svgEl("g", { class: "layer-stations" }, viewport);
+const gLabels = svgEl("g", { class: "layer-labels" }, viewport);
+
+for (const n of nodes) {
+  const g = svgEl("g", {
+    class: `station g-${n.gender}`,
+    tabindex: "0",
+    role: "button",
+    "aria-label": `${n.label}, ${n.species || "unknown species"}, ${n.gender} gender`,
+  }, gStations);
+  const s = n.size, box = { x: -s / 2, y: -s / 2, width: s, height: s };
+  const sym = SYMBOLS[n.species];
+  if (sym) {
+    svgEl("use", { href: `#${sym}-sil`, class: "halo", ...box }, g);
+    svgEl("use", { href: `#${sym}-sil`, class: "gap", ...box }, g);
+    svgEl("use", { href: `#${sym}`, ...box }, g);
+  } else {
+    svgEl("circle", { r: s * 0.36, class: "halo" }, g);
+    svgEl("circle", { r: s * 0.28, class: "gap" }, g);
+    svgEl("circle", { r: s * 0.2, class: "plain-stop" }, g);
+  }
+  svgEl("circle", { r: s / 2 + 5, class: "sel-ring" }, g);
+  g.__node = n;
+  n.g = g;
+  n.t = svgEl("text", { class: "label" + (n.degree >= majorCut ? " major" : "") }, gLabels);
+  n.t.textContent = n.label;
+  g.addEventListener("keydown", ev => {
+    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); selectStation(n.id, false); }
+  });
+}
+
+/* ---------- Path drawing ---------- */
+function pathD(pts) {
+  let d = `M${f(pts[0].x)},${f(pts[0].y)}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const p0 = pts[i - 1], p1 = pts[i], p2 = pts[i + 1];
+    const l1 = Math.hypot(p1.x - p0.x, p1.y - p0.y), l2 = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+    if (l1 < 0.01 || l2 < 0.01) continue;
+    const r = Math.min(BEND, l1 / 2, l2 / 2);
+    const a = { x: p1.x + (p0.x - p1.x) / l1 * r, y: p1.y + (p0.y - p1.y) / l1 * r };
+    const b = { x: p1.x + (p2.x - p1.x) / l2 * r, y: p1.y + (p2.y - p1.y) / l2 * r };
+    d += ` L${f(a.x)},${f(a.y)} Q${f(p1.x)},${f(p1.y)} ${f(b.x)},${f(b.y)}`;
+  }
+  const last = pts[pts.length - 1];
+  return d + ` L${f(last.x)},${f(last.y)}`;
+}
+/* ---------- Metro routing ----------
+   Every relationship is routed along an octilinear grid (the same grid the
+   stations sit on) with A*. Bends are expensive and running alongside existing
+   tracks is cheap, so relationships gather into shared corridors and run there
+   as parallel tracks. A track never merges into another one, so every line can
+   still be followed from one station to the other: a branch only ever happens
+   at a station, as on the real Metro. Records of the same type in both
+   directions (A to B and B to A) share one track. */
+const DIRS = [[1, 0], [1, 1], [0, 1], [-1, 1], [-1, 0], [-1, -1], [0, -1], [1, -1]];
+const BEND_COST = [0, 0.55, 1.8, 8];          // 0, 45, 90, 135 degree turns (180 is forbidden)
+const SHARED_MULT = 0.55, SHARED_STEP = 0.07; // riding alongside tracks already laid
+const MAX_TRACKS = 7, FULL_COST = 4;           // a corridor holds about seven tracks
+const CROSS_COST = 0.9;                       // diagonal crossing another diagonal
+const GHOST = "__ghost";
+
+const cellOf = n => [Math.round(n.x / CELL), Math.round(n.y / CELL)];
+const vk = (i, j) => i + "," + j;
+function segKey(a, b) {
+  // canonical orientation: left to right, or top to bottom when vertical
+  const flip = a[0] > b[0] || (a[0] === b[0] && a[1] > b[1]);
+  return flip ? vk(b[0], b[1]) + "|" + vk(a[0], a[1]) : vk(a[0], a[1]) + "|" + vk(b[0], b[1]);
+}
+const parseV = s => s.split(",").map(Number);
+
+class Heap {
+  constructor() { this.k = []; this.v = []; }
+  get size() { return this.k.length; }
+  push(key, val) {
+    const k = this.k, v = this.v; let i = k.length; k.push(key); v.push(val);
+    while (i > 0) { const p = (i - 1) >> 1; if (k[p] <= key) break; k[i] = k[p]; v[i] = v[p]; i = p; }
+    k[i] = key; v[i] = val;
+  }
+  pop() {
+    const k = this.k, v = this.v, top = v[0], lk = k.pop(), lv = v.pop();
+    if (k.length) {
+      let i = 0; const n = k.length;
+      while (true) {
+        let c = 2 * i + 1; if (c >= n) break;
+        if (c + 1 < n && k[c + 1] < k[c]) c++;
+        if (k[c] >= lk) break;
+        k[i] = k[c]; v[i] = v[c]; i = c;
+      }
+      k[i] = lk; v[i] = lv;
+    }
+    return top;
+  }
+}
+
+function astar(src, dst, type, ctx, avoidStations) {
+  const { minI, minJ, W, H, stationCells, segUse, g, prev, stamp, done } = ctx;
+  ctx.gen++;
+  const gen = ctx.gen;
+  const idx = (i, j, d) => ((i - minI) * H + (j - minJ)) * 9 + d;
+  const heur = (i, j) => {
+    const dx = Math.abs(i - dst[0]), dy = Math.abs(j - dst[1]);
+    return (Math.max(dx, dy) + 0.414 * Math.min(dx, dy)) * SHARED_MULT;
+  };
+  const visit = s => { if (stamp[s] !== gen) { stamp[s] = gen; g[s] = Infinity; prev[s] = -1; } };
+  const heap = new Heap();
+  const start = idx(src[0], src[1], 8);
+  visit(start); g[start] = 0;
+  heap.push(heur(src[0], src[1]), start);
+  while (heap.size) {
+    const s = heap.pop();
+    if (done[s] === gen) continue;
+    done[s] = gen;
+    const d = s % 9, cell = (s - d) / 9;
+    const i = Math.floor(cell / H) + minI, j = (cell % H) + minJ;
+    if (i === dst[0] && j === dst[1]) {
+      const path = [];
+      let cur = s;
+      while (cur !== -1) {
+        const dd = cur % 9, c = (cur - dd) / 9;
+        path.push([Math.floor(c / H) + minI, (c % H) + minJ]);
+        cur = prev[cur];
+      }
+      return path.reverse();
+    }
+    for (let nd = 0; nd < 8; nd++) {
+      let bend = 0;
+      if (d < 8) {
+        const t = Math.min(Math.abs(nd - d), 8 - Math.abs(nd - d));
+        if (t === 4) continue;
+        bend = BEND_COST[t];
+      }
+      const ni = i + DIRS[nd][0], nj = j + DIRS[nd][1];
+      if (ni < minI || nj < minJ || ni >= minI + W || nj >= minJ + H) continue;
+      if (avoidStations && stationCells.has(vk(ni, nj)) && !(ni === dst[0] && nj === dst[1])) continue;
+      const key = segKey([i, j], [ni, nj]);
+      const use = segUse.get(key);
+      const mult = use && use.size ? SHARED_MULT + SHARED_STEP * use.size : 1;
+      let cost = (nd % 2 ? Math.SQRT2 : 1) * mult + bend;
+      if (use && use.size >= MAX_TRACKS) cost += FULL_COST;
+      if (nd % 2 && segUse.has(segKey([ni, j], [i, nj]))) cost += CROSS_COST;
+      const ns = idx(ni, nj, nd);
+      visit(ns);
+      const ng = g[s] + cost;
+      if (ng < g[ns]) { g[ns] = ng; prev[ns] = s; heap.push(ng + heur(ni, nj), ns); }
+    }
+  }
+  return null;
+}
+
+function routeTracks(tracks, visibleNodes) {
+  const cells = visibleNodes.map(cellOf);
+  const pad = 3;
+  const minI = Math.min(...cells.map(c => c[0])) - pad, maxI = Math.max(...cells.map(c => c[0])) + pad;
+  const minJ = Math.min(...cells.map(c => c[1])) - pad, maxJ = Math.max(...cells.map(c => c[1])) + pad;
+  const W = maxI - minI + 1, H = maxJ - minJ + 1, N = W * H * 9;
+  const ctx = {
+    minI, minJ, W, H,
+    stationCells: new Set(cells.map(c => vk(c[0], c[1]))),
+    segUse: new Map(),           // segKey -> Set(track ids)
+    g: new Float64Array(N), prev: new Int32Array(N), stamp: new Uint32Array(N), done: new Uint32Array(N), gen: 0,
+  };
+  // Busiest lines first so they lay down the trunks; short hops first within a line.
+  const typeCount = new Map();
+  for (const t of tracks) typeCount.set(t.type, (typeCount.get(t.type) || 0) + 1);
+  const octile = t => {
+    const dx = Math.abs(t.a[0] - t.b[0]), dy = Math.abs(t.a[1] - t.b[1]);
+    return Math.max(dx, dy) + 0.414 * Math.min(dx, dy);
+  };
+  const order = [...tracks].sort((p, q) =>
+    (p.type === GHOST) - (q.type === GHOST) ||
+    typeCount.get(q.type) - typeCount.get(p.type) ||
+    rankOf(p.type) - rankOf(q.type) ||
+    octile(p) - octile(q));
+  for (const t of order) {
+    t.path = astar(t.a, t.b, t.id, ctx, true) || astar(t.a, t.b, t.id, ctx, false);
+    if (!t.path) continue;
+    for (let k = 0; k < t.path.length - 1; k++) {
+      const key = segKey(t.path[k], t.path[k + 1]);
+      if (!ctx.segUse.has(key)) ctx.segUse.set(key, new Set());
+      ctx.segUse.get(key).add(t.id);
+    }
+  }
+  return ctx.segUse;
+}
+
+/* Turn a chain of grid vertices into an offset polyline. Each segment carries
+   its own track offset; at a vertex the two offset lines are joined at their
+   intersection, and a change of track on a straight run becomes a 45-degree jog. */
+function chainPoints(vs, offsetOf) {
+  const segs = [];
+  for (let k = 0; k < vs.length - 1; k++) {
+    const p = vs[k], q = vs[k + 1];
+    const key = segKey(p, q);
+    const [c0, c1] = key.split("|").map(parseV);
+    const cx = c1[0] - c0[0], cy = c1[1] - c0[1], cl = Math.hypot(cx, cy);
+    const nx = -cy / cl, ny = cx / cl;            // canonical normal: tracks keep one order per corridor
+    const o = offsetOf(key);
+    const a = { x: p[0] * CELL + nx * o, y: p[1] * CELL + ny * o };
+    const b = { x: q[0] * CELL + nx * o, y: q[1] * CELL + ny * o };
+    const L = Math.hypot(b.x - a.x, b.y - a.y);
+    segs.push({ a, b, o, ux: (b.x - a.x) / L, uy: (b.y - a.y) / L, L });
+  }
+  const pts = [segs[0].a];
+  for (let k = 1; k < segs.length; k++) {
+    const s1 = segs[k - 1], s2 = segs[k];
+    const cross = s1.ux * s2.uy - s1.uy * s2.ux;
+    if (Math.abs(cross) < 1e-6) {
+      const gap = Math.hypot(s2.a.x - s1.b.x, s2.a.y - s1.b.y);
+      if (gap < 0.5) continue;                       // same track straight through
+      const J = Math.min(gap, s1.L / 2, s2.L / 2);   // 45-degree track change
+      pts.push({ x: s1.b.x - s1.ux * J, y: s1.b.y - s1.uy * J });
+      pts.push({ x: s2.a.x + s2.ux * J, y: s2.a.y + s2.uy * J });
+      continue;
+    }
+    const t = ((s2.a.x - s1.a.x) * s2.uy - (s2.a.y - s1.a.y) * s2.ux) / cross;
+    const X = { x: s1.a.x + s1.ux * t, y: s1.a.y + s1.uy * t };
+    const vx = vs[k][0] * CELL, vy = vs[k][1] * CELL;
+    if (Math.hypot(X.x - vx, X.y - vy) > Math.abs(s1.o) + Math.abs(s2.o) + 3 * STEP) {
+      pts.push(s1.b, s2.a);                          // very sharp join: no miter
+    } else {
+      pts.push(X);
+    }
+  }
+  pts.push(segs[segs.length - 1].b);
+  return pts;
+}
+
+/* ---------- Render ---------- */
+function edgeStatus(e) {
+  if (state.active.has(e.type)) return "on";
+  return state.ghosts ? "ghost" : "off";
+}
+const edgeById = new Map(edges.map(e => [e.id, e]));
+const pairKey = e => (e.source < e.target ? e.source + "\u0000" + e.target : e.target + "\u0000" + e.source);
+function relationshipCount(list) {
+  // Same rule as relationship_counts() in Python: a mirrored mutual pair counts once.
+  const groups = new Map();
+  for (const e of list) {
+    const k = pairKey(e) + "\u0000" + e.type;
+    if (!groups.has(k)) groups.set(k, { dirs: new Set(), mutual: false });
+    const g = groups.get(k);
+    if (e.mutual) g.mutual = true; else g.dirs.add(e.source);
+  }
+  let n = 0;
+  for (const g of groups.values()) n += g.dirs.size + (g.mutual ? 1 : 0);
+  return n;
+}
+const TOTAL_RELATIONSHIPS = relationshipCount(edges);
+const rankOf = t => (t === GHOST ? 1e6 : typeOrder.get(t));
+
+function render() {
+  const status = new Map(edges.map(e => [e.id, edgeStatus(e)]));
+  const served = new Set();
+  const lineSets = new Map();
+  for (const e of edges) {
+    if (status.get(e.id) !== "on") continue;
+    for (const id of [e.source, e.target]) {
+      served.add(id);
+      if (!lineSets.has(id)) lineSets.set(id, new Set());
+      lineSets.get(id).add(e.type);
+    }
+  }
+  const allOn = state.active.size === lines.length;
+  const visible = new Set(nodes.filter(n => !state.hideUnserved || allOn || served.has(n.id)).map(n => n.id));
+  state.visible = visible;
+  if (state.focus && !visible.has(state.focus)) closeCard();
+
+  let lit = null;
+  if (state.focus) {
+    lit = new Set([state.focus]);
+    for (const e of edges) {
+      if (status.get(e.id) === "on" && (e.source === state.focus || e.target === state.focus)) {
+        lit.add(e.source); lit.add(e.target);
+      }
+    }
+  }
+
+  // One track per (station pair, relationship type). Inactive types in ghost mode share one grey line.
+  const trackMap = new Map();
+  for (const e of edges) {
+    const st = status.get(e.id);
+    if (st === "off" || !visible.has(e.source) || !visible.has(e.target)) continue;
+    const type = st === "on" ? e.type : GHOST;
+    const pair = e.source < e.target ? e.source + "\u0000" + e.target : e.target + "\u0000" + e.source;
+    const id = pair + "\u0000" + type;
+    if (!trackMap.has(id)) {
+      const [sa, sb] = pair.split("\u0000");
+      trackMap.set(id, { id, type, a: cellOf(nodeById.get(sa)), b: cellOf(nodeById.get(sb)), edges: [] });
+    }
+    trackMap.get(id).edges.push(e);
+  }
+  const tracks = [...trackMap.values()];
+  const visibleNodes = nodes.filter(n => visible.has(n.id));
+  const segUse = visibleNodes.length ? routeTracks(tracks, visibleNodes) : new Map();
+  const trackById = new Map(tracks.map(t => [t.id, t]));
+
+  // Track order on each corridor: tracks whose route lies further to one side of the corridor
+  // sit on that side, which keeps bundles from twisting where they split; metro order breaks ties.
+  for (const t of tracks) {
+    if (!t.path) continue;
+    t.cx = t.path.reduce((acc, v) => acc + v[0], 0) / t.path.length;
+    t.cy = t.path.reduce((acc, v) => acc + v[1], 0) / t.path.length;
+  }
+  const offsets = new Map();
+  for (const [key, ids] of segUse) {
+    const [c0, c1] = key.split("|").map(parseV);
+    const dx = c1[0] - c0[0], dy = c1[1] - c0[1], L = Math.hypot(dx, dy);
+    const nx = -dy / L, ny = dx / L, mx = (c0[0] + c1[0]) / 2, my = (c0[1] + c1[1]) / 2;
+    const side = t => Math.round(((t.cx - mx) * nx + (t.cy - my) * ny) * 4) / 4;
+    const list = [...ids].map(id => trackById.get(id))
+      .sort((p, q) => side(p) - side(q) || rankOf(p.type) - rankOf(q.type) || (p.id < q.id ? -1 : 1));
+    list.forEach((t, r) => offsets.set(key + "#" + t.id, (r - (list.length - 1) / 2) * STEP));
+  }
+
+  gGhost.replaceChildren(); gLines.replaceChildren(); gDir.replaceChildren();
+  const segments = [];
+  const drawOrder = tracks.filter(t => t.path).sort((p, q) => rankOf(q.type) - rankOf(p.type));
+  for (const t of drawOrder) {
+    const pts = chainPoints(t.path, key => offsets.get(key + "#" + t.id));
+    for (let i = 0; i < pts.length - 1; i++) segments.push([pts[i], pts[i + 1]]);
+    const ghost = t.type === GHOST;
+    const focusHit = t.edges.some(e => e.source === state.focus || e.target === state.focus);
+    const dim = !!lit && !(focusHit && !ghost);
+    const p = svgEl("path", { d: pathD(pts), class: `line-path ${ghost ? "ghost" : "on"}${dim ? " dim" : ""}` },
+                    ghost || dim ? gGhost : gLines);
+    if (!ghost) p.style.stroke = lineByType.get(t.type).color;
+    p.__track = t;
+  }
+
+  for (const n of nodes) {
+    const show = visible.has(n.id);
+    n.g.style.display = show ? "" : "none";
+    n.t.style.display = show ? "" : "none";
+    if (!show) continue;
+    n.g.setAttribute("transform", `translate(${n.x},${n.y})`);
+    const dim = !!lit && !lit.has(n.id);
+    n.g.classList.toggle("dim", dim);
+    n.g.classList.toggle("selected", n.id === state.focus);
+    n.t.classList.toggle("dim", dim);
+    const inter = (lineSets.get(n.id)?.size || 0) >= 2;
+    if (n.t.classList.contains("interchange") !== inter) { n.t.classList.toggle("interchange", inter); n._w = null; }
+  }
+  placeLabels(visibleNodes, segments);
+
+  const shown = relationshipCount(edges.filter(e => status.get(e.id) === "on" && visible.has(e.source) && visible.has(e.target)));
+  updateSummary(visible, shown);
+  if (state.focus) fillCard(state.focus);
+}
+
+const LABEL_SLOTS = [
+  // [dx factor, dy factor, anchor, baseline, preference cost]
+  [1, 0, "start", "central", 0], [-1, 0, "end", "central", 0.4],
+  [0, 1, "middle", "hanging", 0.8], [0, -1, "middle", "auto", 0.8],
+  [0.72, -0.72, "start", "auto", 1.2], [0.72, 0.72, "start", "hanging", 1.2],
+  [-0.72, -0.72, "end", "auto", 1.6], [-0.72, 0.72, "end", "hanging", 1.6],
+];
+const LABEL_H = 15;
+function labelWidth(n) {
+  if (n._w == null) {
+    const w = n.t.getComputedTextLength();
+    if (w > 0) n._w = w; else return n.label.length * 7.5;
+  }
+  return n._w;
+}
+function slotRect(n, slot) {
+  const r = n.size / 2 + 4, w = labelWidth(n);
+  const ax = n.x + slot[0] * r, ay = n.y + slot[1] * r;
+  const x = slot[2] === "start" ? ax : slot[2] === "end" ? ax - w : ax - w / 2;
+  const y = slot[3] === "central" ? ay - LABEL_H / 2 : slot[3] === "hanging" ? ay : ay - LABEL_H;
+  return { x, y, w, h: LABEL_H, ax, ay };
+}
+const overlaps = (a, b) => a.x < b.x + b.w && b.x < a.x + a.w && a.y < b.y + b.h && b.y < a.y + a.h;
+function segHitsRect(p, q, R) {
+  // Liang-Barsky clipping: does segment pq cross rectangle R?
+  let t0 = 0, t1 = 1;
+  const dx = q.x - p.x, dy = q.y - p.y;
+  const checks = [[-dx, p.x - R.x], [dx, R.x + R.w - p.x], [-dy, p.y - R.y], [dy, R.y + R.h - p.y]];
+  for (const [pp, qq] of checks) {
+    if (pp === 0) { if (qq < 0) return false; continue; }
+    const t = qq / pp;
+    if (pp < 0) { if (t > t1) return false; if (t > t0) t0 = t; }
+    else { if (t < t0) return false; if (t < t1) t1 = t; }
+  }
+  return true;
+}
+function placeLabels(visibleNodes, segments) {
+  const placed = [];
+  const order = [...visibleNodes].sort((a, b) => b.degree - a.degree);
+  for (const n of order) {
+    n.g.setAttribute("transform", `translate(${n.x},${n.y})`);
+    let best = null, bestCost = Infinity;
+    for (const slot of LABEL_SLOTS) {
+      const R = slotRect(n, slot);
+      let cost = slot[4];
+      for (const m of visibleNodes) {
+        if (m === n) continue;
+        const h = m.size / 2;
+        if (overlaps(R, { x: m.x - h, y: m.y - h, w: 2 * h, h: 2 * h })) cost += 12;
+      }
+      for (const P of placed) if (overlaps(R, P)) cost += 20;
+      for (const [p, q] of segments) if (segHitsRect(p, q, R)) cost += 2.5;
+      if (cost < bestCost) { bestCost = cost; best = { slot, R }; }
+      if (cost === 0) break;
+    }
+    placed.push(best.R);
+    const t = n.t;
+    t.setAttribute("text-anchor", best.slot[2]);
+    t.setAttribute("dominant-baseline", best.slot[3]);
+    t.setAttribute("x", f(best.R.ax));
+    t.setAttribute("y", f(best.R.ay));
+  }
+}
+
+function updateSummary(visible, shown) {
+  const box = $("#summary");
+  box.replaceChildren();
+  for (const k of KINDS) {
+    const total = nodes.filter(n => kindOf(n) === k).length;
+    const inView = nodes.filter(n => kindOf(n) === k && visible.has(n.id)).length;
+    htmlEl("strong", { textContent: inView }, box);
+    box.append(` of ${total} ${kindNoun(k, total !== 1)}, `);
+  }
+  htmlEl("strong", { textContent: shown }, box);
+  box.append(` of ${TOTAL_RELATIONSHIPS} edges.`);
+}
+
+/* ---------- Line controls ---------- */
+const lineList = $("#lines");
+for (const line of lines) {
+  const li = htmlEl("li", { className: "line" }, lineList);
+  const toggle = htmlEl("button", { className: "line-toggle", type: "button" }, li);
+  toggle.setAttribute("aria-pressed", "true");
+  toggle.dataset.type = line.type;
+  roundel(line, toggle);
+  htmlEl("span", { className: "line-name", textContent: line.label }, toggle);
+  htmlEl("span", { className: "line-count", textContent: line.count }, toggle);
+  toggle.addEventListener("click", () => {
+    if (state.active.has(line.type)) state.active.delete(line.type); else state.active.add(line.type);
+    syncLines(); render();
+  });
+  const only = htmlEl("button", { className: "line-only", type: "button", textContent: "Only" }, li);
+  only.setAttribute("aria-label", `Show only ${line.label} edges`);
+  only.addEventListener("click", () => {
+    state.active = new Set([line.type]);
+    syncLines(); render(); fit(state.visible);
+  });
+}
+function syncLines() {
+  for (const b of lineList.querySelectorAll(".line-toggle")) {
+    b.setAttribute("aria-pressed", String(state.active.has(b.dataset.type)));
+  }
+}
+$("#all-lines").addEventListener("click", () => { state.active = new Set(lines.map(l => l.type)); syncLines(); render(); });
+$("#no-lines").addEventListener("click", () => { state.active = new Set(); syncLines(); render(); });
+$("#opt-hide").addEventListener("change", ev => { state.hideUnserved = ev.target.checked; render(); });
+$("#opt-ghost").addEventListener("change", ev => { state.ghosts = ev.target.checked; render(); });
+
+/* ---------- Station key ---------- */
+(function buildKey() {
+  const key = $("#key");
+  const species = [...new Set(nodes.map(n => n.species))].filter(s => SYMBOLS[s]);
+  const sample = species[0] || "penguin";
+  const genders = [["female", "Female"], ["male", "Male"], ["unknown", "Not recorded"]]
+    .filter(([g]) => nodes.some(n => n.gender === g));
+  for (const [g, label] of genders) {
+    const s = document.createElementNS(NS, "svg");
+    s.setAttribute("viewBox", "0 0 40 40");
+    s.setAttribute("aria-hidden", "true");
+    const grp = svgEl("g", { class: `station g-${g}` }, s);
+    const box = { x: 2, y: 2, width: 36, height: 36 };
+    svgEl("use", { href: `#${sample}-sil`, class: "halo", ...box }, grp);
+    svgEl("use", { href: `#${sample}-sil`, class: "gap", ...box }, grp);
+    svgEl("use", { href: `#${sample}`, ...box }, grp);
+    key.append(s);
+    htmlEl("span", { textContent: label }, key);
+  }
+  for (const sp of species) {
+    const s = document.createElementNS(NS, "svg");
+    s.setAttribute("viewBox", "0 0 40 40");
+    s.setAttribute("aria-hidden", "true");
+    svgEl("use", { href: `#${sp}`, x: 2, y: 2, width: 36, height: 36 }, s);
+    key.append(s);
+    htmlEl("span", { textContent: sp[0].toUpperCase() + sp.slice(1) }, key);
+  }
+  const s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", "0 0 40 40");
+  svgEl("text", { x: 20, y: 25, "text-anchor": "middle", class: "label interchange", style: "font-size:15px" }, s).textContent = "Ab";
+  key.append(s);
+  htmlEl("span", { textContent: "Bold name: has two or more selected edge types" }, key);
+})();
+
+/* ---------- Station card ---------- */
+const card = $("#card");
+function selectStation(id, center) {
+  state.focus = id;
+  card.hidden = false;
+  render();
+  if (center) centerOn(nodeById.get(id));
+}
+function closeCard() {
+  state.focus = null;
+  card.hidden = true;
+}
+$("#card-close").addEventListener("click", () => { closeCard(); render(); });
+document.addEventListener("keydown", ev => {
+  if (ev.key === "Escape" && state.focus) { closeCard(); render(); }
+});
+
+function fillCard(id) {
+  const n = nodeById.get(id);
+  $("#card-title").textContent = n.label;
+  const body = $("#card-body");
+  body.replaceChildren();
+  const facts = htmlEl("dl", { className: "facts" }, body);
+  const addFact = (k, v) => {
+    htmlEl("dt", { textContent: k }, facts);
+    htmlEl("dd", { textContent: v }, facts);
+  };
+  addFact("Species", n.species ? n.species[0].toUpperCase() + n.species.slice(1) : "Not recorded");
+  addFact("Gender", n.gender === "unknown" ? "Not recorded" : n.gender[0].toUpperCase() + n.gender.slice(1));
+  addFact("Edges", String(n.degree));
+  for (const [k, v] of Object.entries(n.attrs)) {
+    if (v !== null && v !== "") addFact(k.replace(/_/g, " "), String(v));
+  }
+
+  htmlEl("h4", { textContent: `Edges by type` }, body);
+  const byType = new Map();
+  for (const e of edges) {
+    if (!state.active.has(e.type)) continue;
+    if (e.source !== id && e.target !== id) continue;
+    const other = e.source === id ? e.target : e.source;
+    if (!byType.has(e.type)) byType.set(e.type, new Map());
+    const m = byType.get(e.type);
+    if (!m.has(other)) m.set(other, { other, out: false, in: false });
+    const it = m.get(other);
+    if (e.mutual) { it.out = true; it.in = true; }
+    else if (e.source === id) it.out = true;
+    else it.in = true;
+  }
+  if (!byType.size) {
+    htmlEl("p", { className: "empty", textContent: `This ${kindNoun(kindOf(n), false)} has none of the selected edge types. Turn on more edge types to see its edges.` }, body);
+    return;
+  }
+  for (const line of lines) {
+    if (!byType.has(line.type)) continue;
+    const items = [...byType.get(line.type).values()];
+    const row = htmlEl("div", { className: "conn-line" }, body);
+    roundel(line, row);
+    const ul = htmlEl("ul", {}, row);
+    htmlEl("li", { className: "type", textContent: line.label }, ul);
+    items.sort((a, b) => nodeById.get(a.other).label.localeCompare(nodeById.get(b.other).label));
+    for (const it of items) {
+      const li = htmlEl("li", {}, ul);
+      const both = it.out && it.in;
+      const arrow = !DATA.directed ? "" : both ? "\u2194 " : it.out ? "\u2192 " : "\u2190 ";
+      const other = nodeById.get(it.other).label;
+      const b = htmlEl("button", { type: "button", textContent: arrow + other }, li);
+      b.title = !DATA.directed ? "" : both ? `${n.label} and ${other}, both ways` : it.out ? `${n.label} to ${other}` : `${other} to ${n.label}`;
+      b.addEventListener("click", () => selectStation(it.other, true));
+    }
+  }
+}
+
+/* ---------- Pan, zoom, drag ---------- */
+const v = state.view;
+function applyView() {
+  viewport.setAttribute("transform", `translate(${f(v.x)},${f(v.y)}) scale(${v.k})`);
+  svg.classList.toggle("far", v.k < 0.55);
+}
+function zoomAt(mx, my, factor) {
+  const k = clamp(v.k * factor, 0.15, 5), r = k / v.k;
+  v.x = mx - (mx - v.x) * r; v.y = my - (my - v.y) * r; v.k = k;
+  applyView();
+}
+function toWorld(ev) {
+  const r = svg.getBoundingClientRect();
+  return { x: (ev.clientX - r.left - v.x) / v.k, y: (ev.clientY - r.top - v.y) / v.k };
+}
+function fit(ids) {
+  const list = [...ids].map(id => nodeById.get(id));
+  if (!list.length) return;
+  const r = svg.getBoundingClientRect();
+  const minX = Math.min(...list.map(n => n.x)) - 70, maxX = Math.max(...list.map(n => n.x)) + 150;
+  const minY = Math.min(...list.map(n => n.y)) - 70, maxY = Math.max(...list.map(n => n.y)) + 70;
+  const k = clamp(Math.min(r.width / (maxX - minX), r.height / (maxY - minY)), 0.15, 1.6);
+  v.k = k;
+  v.x = r.width / 2 - k * (minX + maxX) / 2;
+  v.y = r.height / 2 - k * (minY + maxY) / 2;
+  applyView();
+}
+function centerOn(n) {
+  const r = svg.getBoundingClientRect();
+  v.k = Math.max(v.k, 0.9);
+  v.x = r.width / 2 - v.k * n.x;
+  v.y = r.height / 2 - v.k * n.y;
+  applyView();
+}
+
+svg.addEventListener("wheel", ev => {
+  ev.preventDefault();
+  const r = svg.getBoundingClientRect();
+  zoomAt(ev.clientX - r.left, ev.clientY - r.top, Math.exp(-ev.deltaY * 0.0015));
+}, { passive: false });
+
+let drag = null;
+svg.addEventListener("pointerdown", ev => {
+  if (ev.button !== 0) return;
+  const st = ev.target.closest && ev.target.closest(".station");
+  drag = { id: ev.pointerId, sx: ev.clientX, sy: ev.clientY, vx: v.x, vy: v.y, moved: false, node: st ? st.__node : null };
+  svg.setPointerCapture(ev.pointerId);
+  hideTip();
+});
+svg.addEventListener("pointermove", ev => {
+  if (!drag) { hover(ev); return; }
+  const dx = ev.clientX - drag.sx, dy = ev.clientY - drag.sy;
+  if (!drag.moved && Math.hypot(dx, dy) > 4) {
+    drag.moved = true;
+    if (!drag.node) svg.classList.add("panning");
+  }
+  if (!drag.moved) return;
+  if (drag.node) {
+    const p = toWorld(ev), n = drag.node;
+    if (!drag.origin) { drag.origin = { x: n.x, y: n.y }; gLines.style.opacity = 0.25; gGhost.style.opacity = 0.25; }
+    n.x = p.x; n.y = p.y;
+    n.g.setAttribute("transform", `translate(${f(n.x)},${f(n.y)})`);
+    n.t.setAttribute("x", f(n.x + n.size / 2 + 4)); n.t.setAttribute("y", f(n.y));
+    n.t.setAttribute("text-anchor", "start"); n.t.setAttribute("dominant-baseline", "central");
+    gDir.replaceChildren();
+    for (const e of edges) {
+      if (!state.active.has(e.type) || (e.source !== n.id && e.target !== n.id)) continue;
+      const o = nodeById.get(e.source === n.id ? e.target : e.source);
+      if (!state.visible.has(o.id)) continue;
+      svgEl("line", { x1: f(n.x), y1: f(n.y), x2: o.x, y2: o.y, class: "preview" }, gDir);
+    }
+  } else {
+    v.x = drag.vx + dx; v.y = drag.vy + dy; applyView();
+  }
+});
+function dropStation(n) {
+  // Snap to the nearest grid cell that no other visible station occupies.
+  const taken = new Set(nodes.filter(m => m !== n && state.visible.has(m.id)).map(m => vk(...cellOf(m))));
+  const ci = Math.round(n.x / CELL), cj = Math.round(n.y / CELL);
+  let best = null;
+  for (let r = 0; !best; r++) {
+    for (let di = -r; di <= r; di++) for (let dj = -r; dj <= r; dj++) {
+      if (Math.max(Math.abs(di), Math.abs(dj)) !== r || taken.has(vk(ci + di, cj + dj))) continue;
+      const d = Math.hypot((ci + di) * CELL - n.x, (cj + dj) * CELL - n.y);
+      if (!best || d < best.d) best = { i: ci + di, j: cj + dj, d };
+    }
+  }
+  n.x = best.i * CELL; n.y = best.j * CELL;
+  gLines.style.opacity = ""; gGhost.style.opacity = "";
+  render();
+}
+function endDrag(ev) {
+  if (!drag) return;
+  if (drag.node && drag.origin) dropStation(drag.node);
+  if (!drag.moved && ev.type === "pointerup") {
+    if (drag.node) selectStation(drag.node.id, false);
+    else if (state.focus) { closeCard(); render(); }
+  }
+  svg.classList.remove("panning");
+  drag = null;
+}
+svg.addEventListener("pointerup", endDrag);
+svg.addEventListener("pointercancel", endDrag);
+svg.addEventListener("pointerleave", hideTip);
+
+$("#zoom-in").addEventListener("click", () => { const r = svg.getBoundingClientRect(); zoomAt(r.width / 2, r.height / 2, 1.3); });
+$("#zoom-out").addEventListener("click", () => { const r = svg.getBoundingClientRect(); zoomAt(r.width / 2, r.height / 2, 1 / 1.3); });
+$("#zoom-fit").addEventListener("click", () => fit(state.visible));
+
+/* ---------- Tooltip ---------- */
+const tip = $("#tip");
+function hover(ev) {
+  const path = ev.target.closest && ev.target.closest(".line-path.on");
+  const st = ev.target.closest && ev.target.closest(".station");
+  const r = svg.getBoundingClientRect();
+  if (path) {
+    const t = path.__track, line = lineByType.get(t.type);
+    const e = t.edges[0];
+    const a = nodeById.get(e.source).label, b = nodeById.get(e.target).label;
+    const twoWay = DATA.directed && t.edges.some(x => x.mutual || x.source !== e.source);
+    const arrow = !DATA.directed ? "\u2013" : twoWay ? "\u2194" : "\u2192";
+    tip.replaceChildren();
+    roundel(line, tip);
+    tip.append(`${line.label}: ${a} ${arrow} ${b}`);
+  } else if (st && svg.classList.contains("far")) {
+    tip.replaceChildren(st.__node.label);
+  } else { hideTip(); return; }
+  tip.style.left = `${ev.clientX - r.left}px`;
+  tip.style.top = `${ev.clientY - r.top}px`;
+  tip.hidden = false;
+}
+function hideTip() { tip.hidden = true; }
+
+/* ---------- Search ---------- */
+const toast = $("#toast");
+let toastTimer = null;
+function say(msg) {
+  toast.textContent = msg; toast.hidden = false;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { toast.hidden = true; }, 3200);
+}
+const dl = $("#station-names");
+[...nodes].sort((a, b) => a.label.localeCompare(b.label)).forEach(n => htmlEl("option", { value: n.label }, dl));
+function runSearch() {
+  const q = $("#search").value.trim().toLowerCase();
+  if (!q) return;
+  const n = nodes.find(x => x.label.toLowerCase() === q) || nodes.find(x => x.label.toLowerCase().includes(q));
+  if (!n) { say(`No ${ANY_SINGULAR} matches "${$("#search").value.trim()}".`); return; }
+  if (!state.visible.has(n.id)) { say(`${n.label} has none of the selected edge types. Show all edges to find them.`); return; }
+  selectStation(n.id, true);
+}
+$("#search").addEventListener("change", runSearch);
+$("#search").addEventListener("keydown", ev => { if (ev.key === "Enter") runSearch(); });
+
+/* ---------- SVG export ---------- */
+$("#download").addEventListener("click", () => {
+  const list = [...state.visible].map(id => nodeById.get(id));
+  if (!list.length) { say("Nothing to download. Select at least one edge type."); return; }
+  const minX = Math.min(...list.map(n => n.x)) - 70, maxX = Math.max(...list.map(n => n.x)) + 170;
+  const minY = Math.min(...list.map(n => n.y)) - 70, maxY = Math.max(...list.map(n => n.y)) + 70;
+  const clone = svg.cloneNode(true);
+  clone.removeAttribute("class");
+  clone.querySelector(".viewport").removeAttribute("transform");
+  clone.setAttribute("viewBox", `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
+  clone.setAttribute("width", maxX - minX);
+  clone.setAttribute("height", maxY - minY);
+  const style = document.createElementNS(NS, "style");
+  const gc = DATA.genderColors;
+  style.textContent = `svg{--female:${gc.female};--male:${gc.male};--unknown:${gc.unknown};` +
+    `--map-label:#142561;--map-halo:#FFFFFF;--ghost:#CDD1DB;` +
+    `--font-cond:"Parisine Narrow","Fira Sans Condensed","Arial Narrow",sans-serif}` + $("#map-css").textContent;
+  clone.insertBefore(style, clone.firstChild);
+  const bg = svgEl("rect", { x: minX, y: minY, width: maxX - minX, height: maxY - minY, fill: "#FFFFFF" });
+  clone.insertBefore(bg, clone.querySelector(".viewport"));
+  const blob = new Blob([new XMLSerializer().serializeToString(clone)], { type: "image/svg+xml" });
+  const a = htmlEl("a", { href: URL.createObjectURL(blob), download: "kyoto_pengys_subnetwork.svg" });
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+});
+
+$("#opt-hide-text").textContent = `Hide ${ALL_PLURAL} with no selected edge`;
+$("#key-title").textContent = ALL_PLURAL[0].toUpperCase() + ALL_PLURAL.slice(1);
+$("#search").placeholder = `Find a ${ANY_SINGULAR}`;
+$("#search").setAttribute("aria-label", `Find a ${ANY_SINGULAR} by name`);
+render();
+applyView();
+if (document.fonts) document.fonts.ready.then(() => { nodes.forEach(n => { n._w = null; }); render(); });
+requestAnimationFrame(() => fit(state.visible));
+window.addEventListener("resize", () => applyView());
+})();
+</script>
+</body>
+</html>
